@@ -98,16 +98,22 @@ function env_host_pattern_regex(var::AbstractString)
     end
 end
 
+if !@isdefined(contains)
+    contains(needle) = haystack -> occursin(needle, haystack)
+end
+
 function host_pattern_regex(value::AbstractString, var::AbstractString="")
     match_any = false
     patterns = Vector{String}[]
     for pattern in split(value, r"\s*,\s*", keepempty=false)
         match_any |= pattern == "**"
         parts = split(pattern, '.')
-        if !all(occursin(r"^([-\w]+|\*\*?)$"a, p) for p in parts)
-            mid = isempty(var) ? "" : "ENV[$(repr(var))] = "
-            @warn("invalid host pattern: $mid$(repr(value))")
-            return MATCH_NONE_RE
+        # emit warning but ignore any pattern we don't recognize;
+        # this allows adding syntax without breaking old versions
+        if !all(contains(r"^([-\w]+|\*\*?)$"a), parts)
+            in = isempty(var) ? "" : " in ENV[$(repr(var))]"
+            @warn("bad host pattern$in: $(repr(pattern))")
+            continue
         end
         push!(patterns, parts)
     end

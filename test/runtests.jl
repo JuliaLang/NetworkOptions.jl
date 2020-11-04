@@ -17,19 +17,42 @@ include("setup.jl")
         end
 
         @testset "bad patterns fail safely" begin
-            without_warnings() do
-                for pattern in ["~", "* *", "*~*", "~, **", "**,∀"]
-                    ENV["JULIA_NO_VERIFY_HOSTS"] = pattern
-                    for url in TEST_URLS, transport in TRANSPORTS
-                        @test verify_host(url, transport)
+            patterns = [
+                "~", "* *", "*~*", "***", "∀", "~, ***",
+                ".com", "*com", ".*com", ".example.com", "*example.com",
+            ]
+            for pattern in patterns
+                ENV["JULIA_NO_VERIFY_HOSTS"] = pattern
+                for url in TEST_URLS, transport in TRANSPORTS
+                    verify = without_warnings() do
+                        verify_host(url, transport)
                     end
+                    @test verify
                 end
             end
             clear_vars!(ENV)
         end
 
+        @testset "only ignore bad patterns in list" begin
+            patterns = ["ok.com,~", "^, ok.com ,, !"]
+            for pattern in patterns
+                ENV["JULIA_NO_VERIFY_HOSTS"] = pattern
+                for url in TEST_URLS
+                    verify = without_warnings() do
+                        verify_host(url)
+                    end
+                    @test verify
+                end
+                verify = without_warnings() do
+                    verify_host("ok.com")
+                end
+                @test !verify
+        end
+            clear_vars!(ENV)
+        end
+
         @testset "verify nothing" begin
-            for pattern in ["**", "example.com,**", "**, blah"]
+            for pattern in ["**", "example.com,**", "**,, blah"]
                 ENV["JULIA_NO_VERIFY_HOSTS"] = pattern
                 for url in TEST_URLS, transport in TRANSPORTS
                     @test !verify_host(url, transport)
