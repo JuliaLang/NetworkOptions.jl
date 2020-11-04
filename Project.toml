@@ -1,0 +1,13 @@
+name = "NoVerifyHosts"
+uuid = "ca575930-c2e3-43a9-ace4-1e988b2c1908"
+authors = ["Stefan Karpinski <stefan@karpinski.org> and contributors"]
+version = "0.1.0"
+
+[compat]
+julia = "1"
+
+[extras]
+Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
+
+[targets]
+test = ["Test"]
