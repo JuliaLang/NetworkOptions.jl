@@ -17,6 +17,7 @@ arch:
 
 notifications:
   email: false
+codecov: true
 
 cache:
   directories:
