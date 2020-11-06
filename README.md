@@ -1,9 +1,9 @@
-# NoVerifyHosts
+# NetworkOptions
 
-[![Build Status](https://travis-ci.org/JuliaLang/NoVerifyHosts.jl.svg?branch=master)](https://travis-ci.org/JuliaLang/NoVerifyHosts.jl)
-[![Codecov](https://codecov.io/gh/JuliaLang/NoVerifyHosts.jl/branch/master/graph/badge.svg)](https://codecov.io/gh/JuliaLang/NoVerifyHosts.jl)
+[![Build Status](https://travis-ci.org/JuliaLang/NetworkOptions.jl.svg?branch=master)](https://travis-ci.org/JuliaLang/NetworkOptions.jl)
+[![Codecov](https://codecov.io/gh/JuliaLang/NetworkOptions.jl/branch/master/graph/badge.svg)](https://codecov.io/gh/JuliaLang/NetworkOptions.jl)
 
-The `NoVerifyHosts` package provides a since utility function `verify_hosts`
+The `NetworkOptions` package provides a since utility function `verify_hosts`
 which allows the caller to inderectly make host verification decisions based on
 the values of three environment variables:
 

@@ -1,4 +1,4 @@
-module NoVerifyHosts
+module NetworkOptions
 
 export verify_host
 

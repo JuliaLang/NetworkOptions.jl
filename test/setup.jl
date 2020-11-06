@@ -1,6 +1,6 @@
 using Test
 using Logging
-using NoVerifyHosts
+using NetworkOptions
 
 const TEST_URLS = [
     "" # not a valid host name

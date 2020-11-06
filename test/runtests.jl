@@ -1,6 +1,6 @@
 include("setup.jl")
 
-@testset "NoVerifyHosts.jl" begin
+@testset "NetworkOptions.jl" begin
     withenv(
         "JULIA_NO_VERIFY_HOSTS" => nothing,
         "JULIA_SSL_NO_VERIFY_HOSTS" => nothing,
