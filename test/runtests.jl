@@ -1,6 +1,30 @@
 include("setup.jl")
 
-@testset "NetworkOptions.jl" begin
+@testset "ca_roots" begin
+    withenv(
+        "JULIA_SSL_CA_ROOTS_PATH" => nothing,
+    ) do
+        @test ca_roots_path() isa String
+        @test ispath(ca_roots_path())
+        if Sys.iswindows() || Sys.isapple()
+            @test ca_roots_path() == BUNDLED_CA_ROOTS
+            @test ca_roots() === nothing
+        else
+            @test ca_roots_path() != BUNDLED_CA_ROOTS
+            @test ca_roots() == ca_roots_path()
+        end
+        unset = ca_roots(), ca_roots_path()
+        value = "Why hello!"
+        ENV["JULIA_SSL_CA_ROOTS_PATH"] = value
+        @test ca_roots() == value
+        @test ca_roots_path() == value
+        ENV["JULIA_SSL_CA_ROOTS_PATH"] = ""
+        @test ca_roots() == unset[1]
+        @test ca_roots_path() == unset[2]
+    end
+end
+
+@testset "verify_host" begin
     withenv(
         "JULIA_NO_VERIFY_HOSTS" => nothing,
         "JULIA_SSL_NO_VERIFY_HOSTS" => nothing,

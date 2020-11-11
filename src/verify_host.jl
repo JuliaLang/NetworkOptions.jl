@@ -84,20 +84,20 @@ env_host_pattern_match(var::AbstractString, host::AbstractString) =
 env_host_pattern_match(var::AbstractString, host::Nothing) =
     env_host_pattern_regex(var) === MATCH_ANY_RE
 
-const HOST_PATTERN_LOCK = ReentrantLock()
-const HOST_PATTERN_CACHE = Dict{String,Tuple{String,Regex}}()
+const ENV_HOST_PATTERN_LOCK = ReentrantLock()
+const ENV_HOST_PATTERN_CACHE = Dict{String,Tuple{String,Regex}}()
 
 function env_host_pattern_regex(var::AbstractString)
-    lock(HOST_PATTERN_LOCK) do
+    lock(ENV_HOST_PATTERN_LOCK) do
         value = get(ENV, var, nothing)
         if value === nothing
-            delete!(HOST_PATTERN_CACHE, var)
+            delete!(ENV_HOST_PATTERN_CACHE, var)
             return MATCH_NONE_RE
         end
-        old_value, regex = get(HOST_PATTERN_CACHE, var, (nothing, nothing))
+        old_value, regex = get(ENV_HOST_PATTERN_CACHE, var, (nothing, nothing))
         old_value == value && return regex
         regex = host_pattern_regex(value, var)
-        HOST_PATTERN_CACHE[var] = (value, regex)
+        ENV_HOST_PATTERN_CACHE[var] = (value, regex)
         return regex
     end
 end
