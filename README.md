@@ -1,6 +1,6 @@
 # NetworkOptions
 
-[![Build Status](https://travis-ci.org/JuliaLang/NetworkOptions.jl.svg?branch=master)](https://travis-ci.org/JuliaLang/NetworkOptions.jl)
+[![Build Status](https://travis-ci.com/JuliaLang/NetworkOptions.jl.svg?branch=master)](https://travis-ci.com/JuliaLang/NetworkOptions.jl)
 [![Codecov](https://codecov.io/gh/JuliaLang/NetworkOptions.jl/branch/master/graph/badge.svg)](https://codecov.io/gh/JuliaLang/NetworkOptions.jl)
 
 The `NetworkOptions` package acts as a mediator between ways of configuring
