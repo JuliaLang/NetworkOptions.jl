@@ -14,6 +14,48 @@ how that configuration is expressed.
 
 ## API
 
+### ca_roots
+
+```jl
+ca_roots() :: Union{Nothing, String}
+```
+The `ca_roots()` function tells the caller where, if anywhere, to find a file or
+directory of PEM-encoded certificate authority roots. By default, on systems
+like Windows and macOS where the built-in TLS engines know how to verify hosts
+using the system's built-in certificate verification mechanism, this function
+will return `nothing`. On classic UNIX systems (excluding macOS), root
+certificates are typically stored in a file in `/etc`: the common places for the
+current UNIX kernel will be searched and if one of these paths exists, it will
+be returned; if none of these typical root certificate paths exist, then the
+path to the set of root certificates that are bundled with Julia is returned.
+
+The default value returned by `ca_roots()` may be overridden by setting the
+`JULIA_SSL_CA_ROOTS_PATH` environment variable to a non-empty value, in which
+case this function will always return that path (whether it exists or not).
+
+### ca_roots_path
+
+```jl
+ca_roots_path() :: String
+```
+The `ca_roots_path()` function is similar to the `ca_roots()` function except
+that it always returns a path to a file or directory of PEM-encoded certificate
+authority roots. When called on a system like Windows or macOS, where system
+root certificates are not stored in the file system, it will currently return
+the path to the set of root certificates that are bundled with Julia. (In the
+future, this function may instead extract the root certificates from the system
+and save them to a file whose path would be returned.)
+
+If it is possible to configure a library that uses TLS to use the system
+certificates that is generally preferrable: i.e. it is better to use
+`ca_roots()` which returns `nothing` to indicate that the system certs should be
+used. The `ca_roots_path()` function should only be used when configuring
+libraries which _require_ a path to a file or directory for root certificates.
+
+The default value returned by `ca_roots_path()` may be overridden by setting the
+`JULIA_SSL_CA_ROOTS_PATH` environment variable to a non-empty value, in which
+case this function will always return that path (whether it exists or not).
+
 ### verify_host
 
 ```jl
