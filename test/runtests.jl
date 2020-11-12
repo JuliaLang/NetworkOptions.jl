@@ -45,13 +45,12 @@ end
                 "~", "* *", "*~*", "***", "∀", "~, ***",
                 ".com", "*com", ".*com", ".example.com", "*example.com",
             ]
-            for pattern in patterns
-                ENV["JULIA_NO_VERIFY_HOSTS"] = pattern
-                for url in TEST_URLS, transport in TRANSPORTS
-                    verify = without_warnings() do
-                        verify_host(url, transport)
-                    end
-                    @test verify
+            for url in TEST_URLS, transport in TRANSPORTS
+                for pattern in patterns
+                    # NB: Setting ENV here in the inner loop so that we defeat
+                    # the ENV_HOST_PATTERN_CACHE and get a warning every time.
+                    ENV["JULIA_NO_VERIFY_HOSTS"] = pattern
+                    @test @test_logs (:warn, r"bad host pattern in ENV") match_mode=:any verify_host(url, transport)
                 end
             end
             clear_vars!(ENV)
@@ -59,19 +58,13 @@ end
 
         @testset "only ignore bad patterns in list" begin
             patterns = ["ok.com,~", "^, ok.com ,, !"]
-            for pattern in patterns
-                ENV["JULIA_NO_VERIFY_HOSTS"] = pattern
-                for url in TEST_URLS
-                    verify = without_warnings() do
-                        verify_host(url)
-                    end
-                    @test verify
+            for url in TEST_URLS
+                for pattern in patterns
+                    ENV["JULIA_NO_VERIFY_HOSTS"] = pattern
+                    @test @test_logs (:warn, r"bad host pattern in ENV") match_mode=:any verify_host(url)
                 end
-                verify = without_warnings() do
-                    verify_host("ok.com")
-                end
-                @test !verify
-        end
+                @test @test_logs min_level=Logging.Error !verify_host("ok.com")
+            end
             clear_vars!(ENV)
         end
 

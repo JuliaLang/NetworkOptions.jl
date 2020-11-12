@@ -52,11 +52,3 @@ function clear_vars!(ENV)
     delete!(ENV, "JULIA_SSH_NO_VERIFY_HOSTS")
 end
 
-function without_warnings(body::Function)
-    log_level = Logging.min_enabled_level(current_logger())
-    disable_logging(Logging.Warn)
-    try body()
-    finally
-        disable_logging(log_level-1)
-    end
-end
