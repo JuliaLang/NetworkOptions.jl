@@ -42,7 +42,10 @@ case this function will always return that path (whether it exists or not).
 """
 ca_roots_path()::String = _ca_roots(false)
 
-const BUNDLED_CA_ROOTS = normpath(Sys.BINDIR, "..", "share", "julia", "cert.pem")
+# NOTE: this has to be a function not a constant since the
+# value of Sys.BINDIR changes from build time to run time.
+bundled_ca_roots() =
+    normpath(Sys.BINDIR::String, "..", "share", "julia", "cert.pem")
 
 const LINUX_CA_ROOTS = [
     "/etc/ssl/cert.pem"								    # Alpine Linux
@@ -73,7 +76,7 @@ function system_ca_roots()
             return
         end
         # TODO: extract system certs on Windows & macOS
-        SYSTEM_CA_ROOTS[] = BUNDLED_CA_ROOTS
+        SYSTEM_CA_ROOTS[] = bundled_ca_roots()
     end
     return SYSTEM_CA_ROOTS[]
 end
