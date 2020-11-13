@@ -1,16 +1,17 @@
 include("setup.jl")
 
 @testset "ca_roots" begin
+    @test isfile(bundled_ca_roots())
     withenv(
         "JULIA_SSL_CA_ROOTS_PATH" => nothing,
     ) do
         @test ca_roots_path() isa String
         @test ispath(ca_roots_path())
         if Sys.iswindows() || Sys.isapple()
-            @test ca_roots_path() == BUNDLED_CA_ROOTS
+            @test ca_roots_path() == bundled_ca_roots()
             @test ca_roots() === nothing
         else
-            @test ca_roots_path() != BUNDLED_CA_ROOTS
+            @test ca_roots_path() != bundled_ca_roots()
             @test ca_roots() == ca_roots_path()
         end
         unset = ca_roots(), ca_roots_path()

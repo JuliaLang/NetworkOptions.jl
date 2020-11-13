@@ -1,7 +1,7 @@
 using Test
 using Logging
 using NetworkOptions
-using NetworkOptions: BUNDLED_CA_ROOTS
+using NetworkOptions: bundled_ca_roots
 
 const TEST_URLS = [
     "" # not a valid host name
