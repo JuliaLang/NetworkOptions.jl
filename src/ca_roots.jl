@@ -9,13 +9,14 @@ like Windows and macOS where the built-in TLS engines know how to verify hosts
 using the system's built-in certificate verification mechanism, this function
 will return `nothing`. On classic UNIX systems (excluding macOS), root
 certificates are typically stored in a file in `/etc`: the common places for the
-current UNIX kernel will be searched and if one of these paths exists, it will
+current UNIX system will be searched and if one of these paths exists, it will
 be returned; if none of these typical root certificate paths exist, then the
 path to the set of root certificates that are bundled with Julia is returned.
 
 The default value returned by `ca_roots()` may be overridden by setting the
-`JULIA_SSL_CA_ROOTS_PATH` environment variable to a non-empty value, in which
-case this function will always return that path (whether it exists or not).
+`JULIA_SSL_CA_ROOTS_PATH`, `SSL_CERT_DIR`, or `SSL_CERT_FILE` environment
+variables, in which case this function will always return the value of the first
+of these variables that is set (whether the path exists or not).
 """
 ca_roots()::Union{Nothing,String} = _ca_roots(true)
 
@@ -37,8 +38,9 @@ used. The `ca_roots_path()` function should only be used when configuring
 libraries which _require_ a path to a file or directory for root certificates.
 
 The default value returned by `ca_roots_path()` may be overridden by setting the
-`JULIA_SSL_CA_ROOTS_PATH` environment variable to a non-empty value, in which
-case this function will always return that path (whether it exists or not).
+`JULIA_SSL_CA_ROOTS_PATH`, `SSL_CERT_DIR`, or `SSL_CERT_FILE` environment
+variables, in which case this function will always return the value of the first
+of these variables that is set (whether the path exists or not).
 """
 ca_roots_path()::String = _ca_roots(false)
 
@@ -81,9 +83,19 @@ function system_ca_roots()
     return SYSTEM_CA_ROOTS[]
 end
 
+const CA_ROOTS_VARS = [
+    "JULIA_SSL_CA_ROOTS_PATH"
+    "SSL_CERT_DIR"
+    "SSL_CERT_FILE"
+]
+
 function _ca_roots(allow_nothing::Bool)
-    path = get(ENV, "JULIA_SSL_CA_ROOTS_PATH", nothing)
-    path !== nothing && !isempty(path) && return path
-    allow_nothing && (Sys.iswindows() || Sys.isapple()) && return nothing
+    for var in CA_ROOTS_VARS
+        path = get(ENV, var, nothing)
+        path !== nothing && !isempty(path) && return path
+    end
+    if Sys.iswindows() || Sys.isapple()
+        allow_nothing && return # use system certs
+    end
     return system_ca_roots()
 end

@@ -4,25 +4,31 @@ save_env()
 clear_env()
 
 @testset "ca_roots" begin
-    @test isfile(bundled_ca_roots())
-    @test ca_roots_path() isa String
-    @test ispath(ca_roots_path())
-    if Sys.iswindows() || Sys.isapple()
-        @test ca_roots_path() == bundled_ca_roots()
-        @test ca_roots() === nothing
-    else
-        @test ca_roots_path() != bundled_ca_roots()
-        @test ca_roots() == ca_roots_path()
+    @testset "system certs" begin
+        @test isfile(bundled_ca_roots())
+        @test ca_roots_path() isa String
+        @test ispath(ca_roots_path())
+        if Sys.iswindows() || Sys.isapple()
+            @test ca_roots_path() == bundled_ca_roots()
+            @test ca_roots() === nothing
+        else
+            @test ca_roots_path() != bundled_ca_roots()
+            @test ca_roots() == ca_roots_path()
+        end
     end
-    unset = ca_roots(), ca_roots_path()
-    value = "Why hello!"
-    ENV["JULIA_SSL_CA_ROOTS_PATH"] = value
-    @test ca_roots() == value
-    @test ca_roots_path() == value
-    ENV["JULIA_SSL_CA_ROOTS_PATH"] = ""
-    @test ca_roots() == unset[1]
-    @test ca_roots_path() == unset[2]
-    clear_env()
+    @testset "env vars" begin
+        unset = ca_roots(), ca_roots_path()
+        value = "Why hello!"
+        for var in CA_ROOTS_VARS
+            ENV[var] = value
+            @test ca_roots() == value
+            @test ca_roots_path() == value
+            ENV[var] = ""
+            @test ca_roots() == unset[1]
+            @test ca_roots_path() == unset[2]
+            clear_env()
+        end
+    end
 end
 
 @testset "verify_host" begin

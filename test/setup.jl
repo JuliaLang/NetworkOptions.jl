@@ -1,7 +1,7 @@
 using Test
 using Logging
 using NetworkOptions
-using NetworkOptions: bundled_ca_roots
+using NetworkOptions: CA_ROOTS_VARS, bundled_ca_roots
 
 const TEST_URLS = [
     "" # not a valid host name
@@ -47,9 +47,11 @@ host_variants(host::AbstractString) = Dict(
 )
 
 const VARIABLES = [
+    "JULIA_SSL_CA_ROOTS_PATH"
+    "SSL_CERT_DIR"
+    "SSL_CERT_FILE"
     "JULIA_NO_VERIFY_HOSTS"
     "JULIA_SSH_NO_VERIFY_HOSTS"
-    "JULIA_SSL_CA_ROOTS_PATH"
     "JULIA_SSL_NO_VERIFY_HOSTS"
 ]
 
