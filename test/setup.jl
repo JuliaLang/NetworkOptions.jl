@@ -46,9 +46,36 @@ host_variants(host::AbstractString) = Dict(
     "xyz://.$host"       => false,
 )
 
-function clear_vars!(ENV)
-    delete!(ENV, "JULIA_NO_VERIFY_HOSTS")
-    delete!(ENV, "JULIA_SSL_NO_VERIFY_HOSTS")
-    delete!(ENV, "JULIA_SSH_NO_VERIFY_HOSTS")
+const VARIABLES = [
+    "JULIA_NO_VERIFY_HOSTS"
+    "JULIA_SSH_NO_VERIFY_HOSTS"
+    "JULIA_SSL_CA_ROOTS_PATH"
+    "JULIA_SSL_NO_VERIFY_HOSTS"
+]
+
+const SAVED_VARS = Dict{String,Union{String,Nothing}}(
+    var => nothing for var in VARIABLES
+)
+
+function save_env()
+    for var in VARIABLES
+        SAVED_VARS[var] = get(ENV, var, nothing)
+    end
 end
 
+function reset_env()
+    for var in VARIABLES
+        val = get(SAVED_VARS, var, nothing)
+        if val !== nothing
+            ENV[var] = val
+        else
+            delete!(ENV, var)
+        end
+    end
+end
+
+function clear_env()
+    for var in VARIABLES
+        delete!(ENV, var)
+    end
+end
