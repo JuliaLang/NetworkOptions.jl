@@ -53,6 +53,7 @@ const VARIABLES = [
     "JULIA_NO_VERIFY_HOSTS"
     "JULIA_SSH_NO_VERIFY_HOSTS"
     "JULIA_SSL_NO_VERIFY_HOSTS"
+    "JULIA_ALWAYS_VERIFY_HOSTS"
 ]
 
 const SAVED_VARS = Dict{String,Union{String,Nothing}}(

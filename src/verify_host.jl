@@ -24,6 +24,7 @@ variables depending on whether `transport` is supplied and what its value is:
 - `JULIA_NO_VERIFY_HOSTS` — hosts that should not be verified for any transport
 - `JULIA_SSL_NO_VERIFY_HOSTS` — hosts that should not be verified for SSL/TLS
 - `JULIA_SSH_NO_VERIFY_HOSTS` — hosts that should not be verified for SSH
+- `JULIA_ALWAYS_VERIFY_HOSTS` — hosts that should always be verified
 
 The values of each of these variables is a comma-separated list of host name
 patterns with the following syntax — each pattern is split on `.` into parts and
@@ -48,16 +49,14 @@ value; a `**` pattern matches any number of host name components. For example:
   `v1.api.example.com`
 - `**.example.com` matches any domain under `example.com`, including
   `example.com` itself, `api.example.com` and `v1.api.example.com`
-```
 """
 function verify_host(
     url :: AbstractString,
     transport :: Union{AbstractString, Nothing} = nothing,
 )
     host = url_host(url)
-    if env_host_pattern_match("JULIA_NO_VERIFY_HOSTS", host)
-        return false # don't verify
-    end
+    env_host_pattern_match("JULIA_ALWAYS_VERIFY_HOSTS", host) && return true
+    env_host_pattern_match("JULIA_NO_VERIFY_HOSTS", host) && return false
     transport = transport === nothing ? nothing : uppercase(transport)
     return if transport in ("SSL", "TLS")
         !env_host_pattern_match("JULIA_SSL_NO_VERIFY_HOSTS", host)

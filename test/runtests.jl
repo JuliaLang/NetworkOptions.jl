@@ -155,6 +155,30 @@ end
         end
         clear_env()
     end
+
+    @testset "transparent proxy" begin
+        ENV["JULIA_ALWAYS_VERIFY_HOSTS"] = "**.example.com"
+        ENV["JULIA_SSL_NO_VERIFY_HOSTS"] = "**"
+        verified_hosts = [
+            "example.com",
+            "Example.COM",
+            "sub.eXampLe.cOm",
+            "123.sub.example.COM",
+        ]
+        unverified_hosts = [
+            "com",
+            "invalid",
+            "github.com",
+            "julialang.org",
+            "pkg.julialang.org",
+        ]
+        all_hosts = [verified_hosts .=> true; unverified_hosts .=> false]
+        for transport in TRANSPORTS, (host, tls_verified) in all_hosts
+            verified = tls_verified || transport ∉ ["tls", "ssl"]
+            @test verify_host(host, transport) == verified
+        end
+        clear_env()
+    end
 end
 
 reset_env()
