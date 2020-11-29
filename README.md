@@ -87,6 +87,7 @@ variables depending on whether `transport` is supplied and what its value is:
 - `JULIA_NO_VERIFY_HOSTS` — hosts that should not be verified for any transport
 - `JULIA_SSL_NO_VERIFY_HOSTS` — hosts that should not be verified for SSL/TLS
 - `JULIA_SSH_NO_VERIFY_HOSTS` — hosts that should not be verified for SSH
+- `JULIA_ALWAYS_VERIFY_HOSTS` — hosts that should always be verified
 
 The values of each of these variables is a comma-separated list of host name
 patterns with the following syntax — each pattern is split on `.` into parts and
@@ -112,7 +113,7 @@ value; a `**` pattern matches any number of host name components. For example:
 - `**.example.com` matches any domain under `example.com`, including
   `example.com` itself, `api.example.com` and `v1.api.example.com`
 
-#### Example scenario
+#### Example scenarios
 
 Suppose you want to not verify any hosts under `safe.example.com` for all
 protocols, skip SSL host verification for just `ssl.example.com`, and skip SSH
@@ -141,3 +142,22 @@ If the URL does not actually use the TLS transport mechanism, then it doesn't
 matter if verification for that transport is enabled or not. Moreover, different
 protocols can use the same transport: for example, `https` and `ftps` protocols
 both use TLS and `ssh`, `scp` and `sftp` protocols all use SSH.
+
+A common scenario that occur behind firewalls is for all connections to external
+systems to go through a transparent man-in-the-middle proxy: any SSL/TLS
+connection to a host under `example.com` would be internal and should have a
+valid certificate but any connection outside of `example.com` would go through
+the proxy, which uses a self-signed certificate. For such a scenario the best
+solution would be to deploy a CA root certificate to all clients, but if that's
+not possible, then configuring clients to verify hosts under `example.com` but
+not verify other SSL/TLS connections would be a viable solution. In fact, as
+long as the man-in-the-middle proxy verifies all upstream TLS connections, this
+is still secure (although not private from the proxy, of course). Such a
+configuration can be accomplished with the following exports:
+```sh
+export JULIA_ALWAYS_VERIFY_HOSTS="**.example.com"
+export JULIA_SSL_NO_VERIFY_HOSTS="**"
+```
+This configuration causes all domains under `example.com` to always be verified
+for all protocols, including SSL/TLS, while skiping host verifiction for SSL/TLS
+connections to all other hosts.
