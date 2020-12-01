@@ -91,8 +91,8 @@ const CA_ROOTS_VARS = [
 
 function _ca_roots(allow_nothing::Bool)
     for var in CA_ROOTS_VARS
-        path = get(ENV, var, nothing)
-        path !== nothing && !isempty(path) && return path
+        path = get(ENV, var, "")
+        !isempty(path) && return path
     end
     if Sys.iswindows() || Sys.isapple()
         allow_nothing && return # use system certs

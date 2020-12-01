@@ -3,6 +3,8 @@ using Logging
 using NetworkOptions
 using NetworkOptions: CA_ROOTS_VARS, bundled_ca_roots
 
+const pkg_dir = dirname(@__DIR__)
+
 const TEST_URLS = [
     "" # not a valid host name
     "com"
@@ -54,6 +56,12 @@ const VARIABLES = [
     "JULIA_SSH_NO_VERIFY_HOSTS"
     "JULIA_SSL_NO_VERIFY_HOSTS"
     "JULIA_ALWAYS_VERIFY_HOSTS"
+    "SSH_DIR"
+    "SSH_KEY_NAME"
+    "SSH_KEY_PASS"
+    "SSH_KEY_PATH"
+    "SSH_PUB_KEY_PATH"
+    "SSH_KNOWN_HOSTS_FILES"
 ]
 
 const SAVED_VARS = Dict{String,Union{String,Nothing}}(
@@ -82,3 +90,6 @@ function clear_env()
         delete!(ENV, var)
     end
 end
+
+save_env()
+clear_env()

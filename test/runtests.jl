@@ -1,8 +1,5 @@
 include("setup.jl")
 
-save_env()
-clear_env()
-
 @testset "ca_roots" begin
     @testset "system certs" begin
         @test isfile(bundled_ca_roots())
@@ -16,6 +13,7 @@ clear_env()
             @test ca_roots() == ca_roots_path()
         end
     end
+
     @testset "env vars" begin
         unset = ca_roots(), ca_roots_path()
         value = "Why hello!"
@@ -31,6 +29,133 @@ clear_env()
     end
 end
 
+@testset "ssh_options" begin
+    path_sep = Sys.iswindows() ? ";" : ":"
+    bundled = joinpath(pkg_dir, "src", "known_hosts")
+
+    @testset "defaults" begin
+        @test ssh_key_pass() === nothing
+        @test ssh_dir() == joinpath(homedir(), ".ssh")
+        @test ssh_key_name() == "id_rsa"
+        @test ssh_key_path() == joinpath(homedir(), ".ssh", "id_rsa")
+        @test ssh_pub_key_path() == joinpath(homedir(), ".ssh", "id_rsa.pub")
+        default = joinpath(homedir(), ".ssh", "known_hosts")
+        @test ssh_known_hosts_files() == [default, bundled]
+        @test ssh_known_hosts_file() == (ispath(default) ? default : bundled)
+    end
+
+    @testset "SSH_KEY_PASS" begin
+        password = "Julia is awesome!"
+        ENV["SSH_KEY_PASS"] = password
+        @test ssh_key_pass() === password
+        clear_env()
+    end
+
+    @testset "SSH_DIR" begin
+        dir = tempname()
+        ENV["SSH_DIR"] = dir
+        @test ssh_dir() == dir
+        @test ssh_key_name() == "id_rsa"
+        @test ssh_key_path() == joinpath(dir, "id_rsa")
+        @test ssh_pub_key_path() == joinpath(dir, "id_rsa.pub")
+        default = joinpath(dir, "known_hosts")
+        @test ssh_known_hosts_files() == [default, bundled]
+        @test ssh_known_hosts_file() == bundled
+        clear_env()
+    end
+
+    @testset "SSH_KEY_NAME" begin
+        ENV["SSH_KEY_NAME"] = "my_key"
+        @test ssh_dir() == joinpath(homedir(), ".ssh")
+        @test ssh_key_name() == "my_key"
+        @test ssh_key_path() == joinpath(homedir(), ".ssh", "my_key")
+        @test ssh_pub_key_path() == joinpath(homedir(), ".ssh", "my_key.pub")
+        clear_env()
+    end
+
+    @testset "SSH_KEY_PATH" begin
+        key_path = tempname()
+        ENV["SSH_KEY_PATH"] = key_path
+        @test ssh_dir() == joinpath(homedir(), ".ssh")
+        @test ssh_key_name() == "id_rsa"
+        @test ssh_key_path() == key_path
+        @test ssh_pub_key_path() == "$key_path.pub"
+        clear_env()
+    end
+
+    @testset "SSH_PUB_KEY_PATH" begin
+        pub_key_path = tempname()
+        ENV["SSH_PUB_KEY_PATH"] = pub_key_path
+        @test ssh_dir() == joinpath(homedir(), ".ssh")
+        @test ssh_key_name() == "id_rsa"
+        @test ssh_key_path() == joinpath(homedir(), ".ssh", "id_rsa")
+        @test ssh_pub_key_path() == pub_key_path
+        clear_env()
+    end
+
+    @testset "SSH_KEY_PATH & SSH_PUB_KEY_PATH" begin
+        key_path = tempname()
+        pub_key_path = tempname()
+        ENV["SSH_KEY_PATH"] = key_path
+        ENV["SSH_PUB_KEY_PATH"] = pub_key_path
+        @test ssh_dir() == joinpath(homedir(), ".ssh")
+        @test ssh_key_name() == "id_rsa"
+        @test ssh_key_path() == key_path
+        @test ssh_pub_key_path() == pub_key_path
+        clear_env()
+    end
+
+    @testset "SSH_KNOWN_HOSTS_FILES" begin
+        # empty
+        ENV["SSH_KNOWN_HOSTS_FILES"] = ""
+        @test ssh_known_hosts_files() == []
+        # explicit default
+        ENV["SSH_KNOWN_HOSTS_FILES"] = path_sep
+        default = joinpath(homedir(), ".ssh", "known_hosts")
+        @test ssh_known_hosts_files() == [default, bundled]
+        @test ssh_known_hosts_file() == (ispath(default) ? default : bundled)
+        # single path
+        path = tempname()
+        ENV["SSH_KNOWN_HOSTS_FILES"] = path
+        @test ssh_known_hosts_files() == [path]
+        @test ssh_known_hosts_file() == path
+        # multi path
+        paths = [tempname() for _ = 1:3]
+        ENV["SSH_KNOWN_HOSTS_FILES"] = join(paths, path_sep)
+        @test ssh_known_hosts_files() == paths
+        @test ssh_known_hosts_file() == paths[1]
+        touch(paths[3])
+        @test ssh_known_hosts_files() == paths
+        @test ssh_known_hosts_file() == paths[3]
+        touch(paths[2])
+        @test ssh_known_hosts_files() == paths
+        @test ssh_known_hosts_file() == paths[2]
+        rm(paths[2])
+        rm(paths[3])
+        # prepend path
+        path = tempname()
+        ENV["SSH_KNOWN_HOSTS_FILES"] = path * path_sep
+        @test ssh_known_hosts_files() == [path, default, bundled]
+        @test ssh_known_hosts_file() == (ispath(default) ? default : bundled)
+        touch(path)
+        @test ssh_known_hosts_file() == path
+        rm(path)
+        # append path
+        path = tempname()
+        ENV["SSH_KNOWN_HOSTS_FILES"] = path_sep * path
+        @test ssh_known_hosts_files() == [default, bundled, path]
+        @test ssh_known_hosts_file() == (ispath(default) ? default : bundled)
+        # prepend default (no effect)
+        ENV["SSH_KNOWN_HOSTS_FILES"] = default * path_sep
+        @test ssh_known_hosts_files() == [default, bundled]
+        @test ssh_known_hosts_file() == (ispath(default) ? default : bundled)
+        # prepend bundled (swap order)
+        ENV["SSH_KNOWN_HOSTS_FILES"] = bundled * path_sep
+        @test ssh_known_hosts_files() == [bundled, default]
+        @test ssh_known_hosts_file() == bundled
+    end
+end
+
 @testset "verify_host" begin
     @testset "verify everything" begin
         for url in TEST_URLS
@@ -39,7 +164,6 @@ end
                 @test verify_host(url, transport)
             end
         end
-        clear_env()
     end
 
     @testset "bad patterns fail safely" begin
