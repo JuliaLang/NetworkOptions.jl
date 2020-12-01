@@ -1,6 +1,8 @@
 export verify_host
 
 """
+    verify_host(url::AbstractString, [transport::AbstractString]) :: Bool
+
 The `verify_host` function tells the caller whether the identity of a host
 should be verified when communicating over secure transports like TLS or SSH.
 The `url` argument may be:
