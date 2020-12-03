@@ -31,7 +31,7 @@ end
 
 @testset "ssh_options" begin
     path_sep = Sys.iswindows() ? ";" : ":"
-    bundled = joinpath(pkg_dir, "src", "known_hosts")
+    bundled = bundled_known_hosts()
 
     @testset "defaults" begin
         @test ssh_key_pass() === nothing
