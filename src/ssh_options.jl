@@ -106,8 +106,8 @@ match; the caller should only continue to search further known hosts files if
 there are no entries for the host in question in an earlier file.
 """
 function ssh_known_hosts_files()
+    bundled = bundled_known_hosts()
     default = joinpath(ssh_dir(), "known_hosts")
-    bundled = joinpath(@__DIR__, "known_hosts")
     value = get(ENV, "SSH_KNOWN_HOSTS_FILES", nothing)
     value === nothing && return [default, bundled]
     isempty(value) && return String[]
@@ -140,3 +140,26 @@ function ssh_known_hosts_file()
     end
     return files[1]
 end
+
+## helper functions
+
+const BUNDLED_KNOWN_HOSTS_LOCK = ReentrantLock()
+const BUNDLED_KNOWN_HOSTS_FILE = Ref{String}()
+
+function bundled_known_hosts()
+    lock(BUNDLED_KNOWN_HOSTS_LOCK) do
+        if !isassigned(BUNDLED_KNOWN_HOSTS_FILE)
+            BUNDLED_KNOWN_HOSTS_FILE[], io = mktemp()
+            write(io, BUNDLED_KNOWN_HOSTS)
+            close(io)
+        end
+    end
+    return BUNDLED_KNOWN_HOSTS_FILE[]
+end
+
+const BUNDLED_KNOWN_HOSTS = """
+github.com ssh-rsa AAAAB3NzaC1yc2EAAAABIwAAAQEAq2A7hRGmdnm9tUDbO9IDSwBK6TbQa+PXYPCPy6rbTrTtw7PHkccKrpp0yVhp5HdEIcKr6pLlVDBfOLX9QUsyCOV0wzfjIJNlGEYsdlLJizHhbn2mUjvSAHQqZETYP81eFzLQNnPHt4EVVUh7VfDESU84KezmD5QlWpXLmvU31/yMf+Se8xhHTvKSCZIFImWwoG6mbUoWf9nzpIoaSjB+weqqUUmpaaasXVal72J+UX2B+2RPW3RcT0eOzQgqlJL3RKrTJvdsjE3JEAvGq3lGHSZXy28G3skua2SmVi/w4yCE6gbODqnTWlg7+wC604ydGXA8VJiS5ap43JXiUFFAaQ==
+gitlab.com ecdsa-sha2-nistp256 AAAAE2VjZHNhLXNoYTItbmlzdHAyNTYAAAAIbmlzdHAyNTYAAABBBFSMqzJeV9rUzU4kWitGjeR4PWSa29SPqJ1fVkhtj3Hw9xjLVXVYrU9QlYWrOLXBpQ6KWjbjTDTdDkoohFzgbEY=
+gitlab.com ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIAfuCHKVTjquxvt6CM6tdG4SLp1Btn/nOeHHE5UOzRdf
+gitlab.com ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQCsj2bNKTBSpIYDEGk9KxsGh3mySTRgMtXL583qmBpzeQ+jqCMRgBqB98u3z++J1sKlXHWfM9dyhSevkMwSbhoR8XIq/U0tCNyokEi/ueaBMCvbcTHhO7FcwzY92WK4Yt0aGROY5qX2UKSeOvuP4D6TPqKF1onrSzH9bx9XUf2lEdWT/ia1NEKjunUqu1xOB/StKDHMoX4/OKyIzuS0q/T1zOATthvasJFoPrAjkohTyaDUz2LN5JoH839hViyEG82yB+MjcFV5MU3N1l1QL3cVUCh93xSaua1N85qivl+siMkPGbO5xR/En4iEY6K2XPASUEMaieWVNTRCtJ4S8H+9
+"""
