@@ -138,7 +138,8 @@ function ssh_known_hosts_file()
     for file in files
         ispath(file) && return file
     end
-    return files[1]
+    return !isempty(files) ? files[1] :
+        isfile("/dev/null") ? "/dev/null" : tempname()
 end
 
 ## helper functions

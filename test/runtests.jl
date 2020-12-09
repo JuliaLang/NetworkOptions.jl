@@ -118,6 +118,8 @@ end
         # empty
         ENV["SSH_KNOWN_HOSTS_FILES"] = ""
         @test ssh_known_hosts_files() == []
+        file = ssh_known_hosts_file()
+        @test !isfile(file) || isempty(read(file))
         # explicit default
         ENV["SSH_KNOWN_HOSTS_FILES"] = path_sep
         default = joinpath(homedir(), ".ssh", "known_hosts")
