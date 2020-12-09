@@ -26,6 +26,15 @@ include("setup.jl")
             @test ca_roots_path() == unset[2]
             clear_env()
         end
+        for (i, var) in enumerate(CA_ROOTS_VARS)
+            ENV[var] = string(i)
+        end
+        @test ca_roots() == "1"
+        @test ca_roots_path() == "1"
+        ENV[CA_ROOTS_VARS[1]] = ""
+        @test ca_roots() == unset[1]
+        @test ca_roots_path() == unset[2]
+        clear_env()
     end
 end
 

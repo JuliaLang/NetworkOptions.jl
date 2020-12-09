@@ -16,7 +16,10 @@ path to the set of root certificates that are bundled with Julia is returned.
 The default value returned by `ca_roots()` may be overridden by setting the
 `JULIA_SSL_CA_ROOTS_PATH`, `SSL_CERT_DIR`, or `SSL_CERT_FILE` environment
 variables, in which case this function will always return the value of the first
-of these variables that is set (whether the path exists or not).
+of these variables that is set (whether the path exists or not). If
+`JULIA_SSL_CA_ROOTS_PATH` is set to the empty string, then the other variables
+are ignored (as if unset); if the other variables are set to the empty string,
+they behave is if they are not set.
 """
 ca_roots()::Union{Nothing,String} = _ca_roots(true)
 
@@ -40,7 +43,10 @@ libraries which _require_ a path to a file or directory for root certificates.
 The default value returned by `ca_roots_path()` may be overridden by setting the
 `JULIA_SSL_CA_ROOTS_PATH`, `SSL_CERT_DIR`, or `SSL_CERT_FILE` environment
 variables, in which case this function will always return the value of the first
-of these variables that is set (whether the path exists or not).
+of these variables that is set (whether the path exists or not). If
+`JULIA_SSL_CA_ROOTS_PATH` is set to the empty string, then the other variables
+are ignored (as if unset); if the other variables are set to the empty string,
+they behave is if they are not set.
 """
 ca_roots_path()::String = _ca_roots(false)
 
@@ -91,8 +97,13 @@ const CA_ROOTS_VARS = [
 
 function _ca_roots(allow_nothing::Bool)
     for var in CA_ROOTS_VARS
-        path = get(ENV, var, "")
-        !isempty(path) && return path
+        path = get(ENV, var, nothing)
+        if path == "" && startswith(var, "JULIA_")
+            break # ignore other vars
+        end
+        if !isempty(something(path, ""))
+            return path
+        end
     end
     if Sys.iswindows() || Sys.isapple()
         allow_nothing && return # use system certs
