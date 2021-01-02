@@ -51,7 +51,7 @@ future, this function may instead extract the root certificates from the system
 and save them to a file whose path would be returned.)
 
 If it is possible to configure a library that uses TLS to use the system
-certificates that is generally preferrable: i.e. it is better to use
+certificates that is generally preferable: i.e. it is better to use
 `ca_roots()` which returns `nothing` to indicate that the system certs should be
 used. The `ca_roots_path()` function should only be used when configuring
 libraries which _require_ a path to a file or directory for root certificates.
@@ -71,7 +71,7 @@ ssh_dir() :: String
 ```
 The `ssh_dir()` function returns the location of the directory where the `ssh`
 program keeps/looks for configuration files. By default this is `~/.ssh` but
-this can be overridden by setting the envirnoment variable `SSH_DIR`.
+this can be overridden by setting the environment variable `SSH_DIR`.
 
 ### ssh_key_name
 
@@ -79,7 +79,7 @@ this can be overridden by setting the envirnoment variable `SSH_DIR`.
 ssh_key_name() :: String
 ```
 The `ssh_key_name()` function returns the base name of key files that SSH should
-use for when estabilishing a connection. There is usually no reason that this
+use for when establishing a connection. There is usually no reason that this
 function should be called directly and libraries should generally use the
 `ssh_key_path` and `ssh_pub_key_path` functions to get full paths. If the
 environment variable `SSH_KEY_NAME` is set then this function returns that;
@@ -123,7 +123,7 @@ ssh_key_pass() :: String
 The `ssh_key_pass()` function returns the value of the environment variable
 `SSH_KEY_PASS` if it is set or `nothing` if it is not set. In the future, this
 may be able to find a password by other means, such as secure system storage, so
-packages that need a pawword to decrypt an SSH private key should use this API
+packages that need a password to decrypt an SSH private key should use this API
 instead of directly checking the environment variable so that they gain such
 capabilities automatically when they are added.
 
@@ -185,10 +185,10 @@ input URL. In particular, the protocol of the URL does not matter (more below).
 
 The `transport` argument indicates the kind of transport that the query is
 about. The currently known values are `SSL` (alias `TLS`) and `SSH`. If the
-transport is ommitted, the query will return `true` only if the host name should
+transport is omitted, the query will return `true` only if the host name should
 not be verified regardless of transport.
 
-The host name is matched against the host patterns in the relavent environment
+The host name is matched against the host patterns in the relevant environment
 variables depending on whether `transport` is supplied and what its value is:
 
 - `JULIA_NO_VERIFY_HOSTS` — hosts that should not be verified for any transport
@@ -266,5 +266,5 @@ export JULIA_ALWAYS_VERIFY_HOSTS="**.example.com"
 export JULIA_SSL_NO_VERIFY_HOSTS="**"
 ```
 This configuration causes all domains under `example.com` to always be verified
-for all protocols, including SSL/TLS, while skiping host verifiction for SSL/TLS
+for all protocols, including SSL/TLS, while skipping host verification for SSL/TLS
 connections to all other hosts.
