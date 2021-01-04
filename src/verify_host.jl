@@ -17,10 +17,10 @@ input URL. In particular, the protocol of the URL does not matter (more below).
 
 The `transport` argument indicates the kind of transport that the query is
 about. The currently known values are `SSL` (alias `TLS`) and `SSH`. If the
-transport is ommitted, the query will return `true` only if the host name should
+transport is omitted, the query will return `true` only if the host name should
 not be verified regardless of transport.
 
-The host name is matched against the host patterns in the relavent environment
+The host name is matched against the host patterns in the relevant environment
 variables depending on whether `transport` is supplied and what its value is:
 
 - `JULIA_NO_VERIFY_HOSTS` — hosts that should not be verified for any transport
