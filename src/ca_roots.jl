@@ -35,7 +35,7 @@ future, this function may instead extract the root certificates from the system
 and save them to a file whose path would be returned.)
 
 If it is possible to configure a library that uses TLS to use the system
-certificates that is generally preferrable: i.e. it is better to use
+certificates that is generally preferable: i.e. it is better to use
 `ca_roots()` which returns `nothing` to indicate that the system certs should be
 used. The `ca_roots_path()` function should only be used when configuring
 libraries which _require_ a path to a file or directory for root certificates.

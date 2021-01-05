@@ -12,7 +12,7 @@ export
 
 The `ssh_dir()` function returns the location of the directory where the `ssh`
 program keeps/looks for configuration files. By default this is `~/.ssh` but
-this can be overridden by setting the envirnoment variable `SSH_DIR`.
+this can be overridden by setting the environment variable `SSH_DIR`.
 """
 ssh_dir() = get(ENV, "SSH_DIR", joinpath(homedir(), ".ssh"))
 
@@ -22,7 +22,7 @@ ssh_dir() = get(ENV, "SSH_DIR", joinpath(homedir(), ".ssh"))
 The `ssh_key_pass()` function returns the value of the environment variable
 `SSH_KEY_PASS` if it is set or `nothing` if it is not set. In the future, this
 may be able to find a password by other means, such as secure system storage, so
-packages that need a pawword to decrypt an SSH private key should use this API
+packages that need a password to decrypt an SSH private key should use this API
 instead of directly checking the environment variable so that they gain such
 capabilities automatically when they are added.
 """
@@ -32,7 +32,7 @@ ssh_key_pass() = get(ENV, "SSH_KEY_PASS", nothing)
     ssh_key_name() :: String
 
 The `ssh_key_name()` function returns the base name of key files that SSH should
-use for when estabilishing a connection. There is usually no reason that this
+use for when establishing a connection. There is usually no reason that this
 function should be called directly and libraries should generally use the
 `ssh_key_path` and `ssh_pub_key_path` functions to get full paths. If the
 environment variable `SSH_KEY_NAME` is set then this function returns that;
