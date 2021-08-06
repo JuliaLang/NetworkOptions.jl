@@ -58,9 +58,12 @@ bundled_ca_roots() =
 const LINUX_CA_ROOTS = [
     "/etc/ssl/cert.pem"								    # Alpine Linux
     "/etc/ssl/ca-bundle.pem"			                # OpenSUSE
+    "/etc/ssl/ca-certificates.pem"			            # OpenSUSE
+    "/etc/ssl/certs/ca-bundle.crt"                      # Debian/Ubuntu/Gentoo etc.
     "/etc/ssl/certs/ca-certificates.crt"                # Debian/Ubuntu/Gentoo etc.
     "/etc/pki/ca-trust/extracted/pem/tls-ca-bundle.pem"	# CentOS/RHEL 7
     "/etc/pki/tls/certs/ca-bundle.crt"	                # Fedora/RHEL 6
+    "/etc/pki/tls/certs/ca-certificates.crt"	        # Fedora/RHEL 6
     "/etc/pki/tls/cacert.pem"			                # OpenELEC
 ]
 
@@ -73,16 +76,32 @@ const BSD_CA_ROOTS = [
 const SYSTEM_CA_ROOTS_LOCK = ReentrantLock()
 const SYSTEM_CA_ROOTS = Ref{String}()
 
+const OPENSSL_SPECIFIC = "-----BEGIN TRUSTED CERTIFICATE-----"
+const OPENSSL_WARNING = """
+NetworkOptions could only find OpenSSL-specific TLS certificate files which
+cannot be used by MbedTLS. Please open an issue at
+https://github.com/JuliaLang/NetworkOptions.jl/issues with details about your
+system, especially where generic non-OpenSSL certificates can be found. See
+https://stackoverflow.com/questions/55447752/what-does-begin-trusted-certificate-in-a-certificate-mean
+for more details.
+""" |> split |> text -> join(text, " ")
+
 function system_ca_roots()
     lock(SYSTEM_CA_ROOTS_LOCK) do
         isassigned(SYSTEM_CA_ROOTS) && return
         search_path = Sys.islinux() ? LINUX_CA_ROOTS :
             Sys.isbsd() && !Sys.isapple() ? BSD_CA_ROOTS : String[]
+        openssl_only = false
         for path in search_path
             ispath(path) || continue
+            if any(line == OPENSSL_SPECIFIC for line in eachline(path))
+                openssl_only = true
+                continue
+            end
             SYSTEM_CA_ROOTS[] = path
             return
         end
+        openssl_only && @warn OPENSSL_WARNING
         # TODO: extract system certs on Windows & macOS
         SYSTEM_CA_ROOTS[] = bundled_ca_roots()
     end
