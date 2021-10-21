@@ -1,5 +1,6 @@
 # NetworkOptions
 
+[![Build Status](https://github.com/JuliaLang/NetworkOptions.jl/actions/workflows/ci.yml/badge.svg)](https://github.com/JuliaLang/NetworkOptions.jl/actions/workflows/ci.yml)
 [![Codecov](https://codecov.io/gh/JuliaLang/NetworkOptions.jl/branch/master/graph/badge.svg)](https://codecov.io/gh/JuliaLang/NetworkOptions.jl)
 
 The `NetworkOptions` package acts as a mediator between ways of configuring
