@@ -316,4 +316,12 @@ end
     end
 end
 
+@testset "__diagnostics__()" begin
+    # check that `NetworkOptions.__diagnostics__(io)` doesn't error, produces some output
+    buf = PipeBuffer()
+    NetworkOptions.__diagnostics__(buf)
+    output = read(buf, String)
+    @test occursin("Relevant environment variables:", output)
+end
+
 reset_env()
