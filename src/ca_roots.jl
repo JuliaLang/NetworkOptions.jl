@@ -76,31 +76,32 @@ const BSD_CA_ROOTS = [
 const SYSTEM_CA_ROOTS_LOCK = ReentrantLock()
 const SYSTEM_CA_ROOTS = Ref{String}()
 
-const OPENSSL_SPECIFIC = "-----BEGIN TRUSTED CERTIFICATE-----"
+const BEGIN_CERT_REGULAR = "-----BEGIN CERTIFICATE-----"
+const BEGIN_CERT_OPENSSL = "-----BEGIN TRUSTED CERTIFICATE-----"
 const OPENSSL_WARNING = """
-NetworkOptions could only find OpenSSL-specific TLS certificate files which
-cannot be used by MbedTLS. Please open an issue at
-https://github.com/JuliaLang/NetworkOptions.jl/issues with details about your
-system, especially where generic non-OpenSSL certificates can be found. See
-https://stackoverflow.com/questions/55447752/what-does-begin-trusted-certificate-in-a-certificate-mean
-for more details.
+NetworkOptions could only find OpenSSL-specific TLS certificates which cannot be used by MbedTLS. Please open an issue at https://github.com/JuliaLang/NetworkOptions.jl/issues with details about your system, especially where generic non-OpenSSL certificates can be found. See https://stackoverflow.com/questions/55447752/what-does-begin-trusted-certificate-in-a-certificate-mean for more details.
 """ |> split |> text -> join(text, " ")
 
 function system_ca_roots()
     lock(SYSTEM_CA_ROOTS_LOCK) do
-        isassigned(SYSTEM_CA_ROOTS) && return
+        isassigned(SYSTEM_CA_ROOTS) && return # from lock()
         search_path = Sys.islinux() ? LINUX_CA_ROOTS :
             Sys.isbsd() && !Sys.isapple() ? BSD_CA_ROOTS : String[]
         openssl_only = false
         for path in search_path
             ispath(path) || continue
-            if any(line == OPENSSL_SPECIFIC for line in eachline(path))
-                openssl_only = true
-                continue
+            for line in eachline(path)
+                if line == BEGIN_CERT_REGULAR
+                    SYSTEM_CA_ROOTS[] = path
+                    return # from lock()
+                elseif line == BEGIN_CERT_OPENSSL
+                    openssl_only = true
+                end
             end
-            SYSTEM_CA_ROOTS[] = path
-            return
         end
+        # warn if we:
+        #  1. did not find any regular certs
+        #  2. did find OpenSSL-only certs
         openssl_only && @warn OPENSSL_WARNING
         # TODO: extract system certs on Windows & macOS
         SYSTEM_CA_ROOTS[] = bundled_ca_roots()
