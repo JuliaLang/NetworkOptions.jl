@@ -16,8 +16,8 @@ verify or not is made based solely on the host name, not anything else about the
 input URL. In particular, the protocol of the URL does not matter (more below).
 
 The `transport` argument indicates the kind of transport that the query is
-about. The currently known values are `SSL` (alias `TLS`) and `SSH`. If the
-transport is omitted, the query will return `true` only if the host name should
+about. The currently known values are `SSL`/`ssl` (alias `TLS`/`tls`) and `SSH`/`ssh`.
+If the transport is omitted, the query will return `true` only if the host name should
 not be verified regardless of transport.
 
 The host name is matched against the host patterns in the relevant environment
@@ -54,15 +54,15 @@ value; a `**` pattern matches any number of host name components. For example:
 """
 function verify_host(
     url :: AbstractString,
-    transport :: Union{AbstractString, Nothing} = nothing,
+    tr :: Union{AbstractString, Nothing} = nothing,
 )
     host = url_host(url)
     env_host_pattern_match("JULIA_ALWAYS_VERIFY_HOSTS", host) && return true
     env_host_pattern_match("JULIA_NO_VERIFY_HOSTS", host) && return false
-    transport = transport === nothing ? nothing : uppercase(transport)
-    return if transport in ("SSL", "TLS")
+    tr === nothing && return true
+    return if tr == "SSL" || tr == "ssl" || tr == "TLS" || tr == "tls"
         !env_host_pattern_match("JULIA_SSL_NO_VERIFY_HOSTS", host)
-    elseif transport == "SSH"
+    elseif tr == "SSH" || tr == "ssh"
         !env_host_pattern_match("JULIA_SSH_NO_VERIFY_HOSTS", host)
     else
         true # do verify
