@@ -56,15 +56,15 @@ bundled_ca_roots() =
     normpath(Sys.BINDIR::String, "..", "share", "julia", "cert.pem")
 
 const LINUX_CA_ROOTS = [
-    "/etc/ssl/cert.pem"								    # Alpine Linux
-    "/etc/ssl/ca-bundle.pem"			                # OpenSUSE
-    "/etc/ssl/ca-certificates.pem"			            # OpenSUSE
+    "/etc/ssl/cert.pem"                                 # Alpine Linux
+    "/etc/ssl/ca-bundle.pem"                            # OpenSUSE
+    "/etc/ssl/ca-certificates.pem"                      # OpenSUSE
     "/etc/ssl/certs/ca-bundle.crt"                      # Debian/Ubuntu/Gentoo etc.
     "/etc/ssl/certs/ca-certificates.crt"                # Debian/Ubuntu/Gentoo etc.
-    "/etc/pki/ca-trust/extracted/pem/tls-ca-bundle.pem"	# CentOS/RHEL 7
-    "/etc/pki/tls/certs/ca-bundle.crt"	                # Fedora/RHEL 6
-    "/etc/pki/tls/certs/ca-certificates.crt"	        # Fedora/RHEL 6
-    "/etc/pki/tls/cacert.pem"			                # OpenELEC
+    "/etc/pki/ca-trust/extracted/pem/tls-ca-bundle.pem" # CentOS/RHEL 7
+    "/etc/pki/tls/certs/ca-bundle.crt"                  # Fedora/RHEL 6
+    "/etc/pki/tls/certs/ca-certificates.crt"            # Fedora/RHEL 6
+    "/etc/pki/tls/cacert.pem"                           # OpenELEC
 ]
 
 const BSD_CA_ROOTS = [
