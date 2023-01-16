@@ -80,8 +80,9 @@ end
 const MATCH_ANY_RE = r""
 const MATCH_NONE_RE = r"$.^"
 
+# TODO: What to do when `env_host_pattern_regex` returns `nothing`?
 env_host_pattern_match(var::AbstractString, host::AbstractString) =
-    occursin(env_host_pattern_regex(var), host)
+    occursin(env_host_pattern_regex(var)::Regex, host)
 env_host_pattern_match(var::AbstractString, host::Nothing) =
     env_host_pattern_regex(var) === MATCH_ANY_RE
 
