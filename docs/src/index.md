@@ -1,4 +1,4 @@
-# NetworkOptions
+# Network Options
 
 ```@docs
 NetworkOptions.ca_roots
