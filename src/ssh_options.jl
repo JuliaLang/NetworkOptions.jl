@@ -145,17 +145,26 @@ end
 ## helper functions
 
 const BUNDLED_KNOWN_HOSTS_LOCK = ReentrantLock()
-const BUNDLED_KNOWN_HOSTS_FILE = Ref{String}()
+const BUNDLED_KNOWN_HOSTS_FILE = Ref{Union{Nothing, String}}(nothing)
 
 function bundled_known_hosts()
     lock(BUNDLED_KNOWN_HOSTS_LOCK) do
-        if !isassigned(BUNDLED_KNOWN_HOSTS_FILE)
-            BUNDLED_KNOWN_HOSTS_FILE[], io = mktemp()
+        file = BUNDLED_KNOWN_HOSTS_FILE[]
+        if file === nothing
+            file, io = mktemp()
+            BUNDLED_KNOWN_HOSTS_FILE[] = file
             write(io, BUNDLED_KNOWN_HOSTS)
             close(io)
         end
     end
-    return BUNDLED_KNOWN_HOSTS_FILE[]
+    return file::String
+end
+
+function __init__()
+    # Reset in case we serialized a value here.
+    lock(BUNDLED_KNOWN_HOSTS_LOCK) do
+        BUNDLED_KNOWN_HOSTS_FILE[] = nothing
+    end
 end
 
 const BUNDLED_KNOWN_HOSTS = """
