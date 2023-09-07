@@ -156,8 +156,8 @@ function bundled_known_hosts()
             write(io, BUNDLED_KNOWN_HOSTS)
             close(io)
         end
+        return file::String
     end
-    return file::String
 end
 
 function __init__()
