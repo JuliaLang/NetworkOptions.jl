@@ -160,13 +160,6 @@ function bundled_known_hosts()
     end
 end
 
-function __init__()
-    # Reset in case we serialized a value here.
-    lock(BUNDLED_KNOWN_HOSTS_LOCK) do
-        BUNDLED_KNOWN_HOSTS_FILE[] = nothing
-    end
-end
-
 const BUNDLED_KNOWN_HOSTS = """
 github.com ecdsa-sha2-nistp256 AAAAE2VjZHNhLXNoYTItbmlzdHAyNTYAAAAIbmlzdHAyNTYAAABBBEmKSENjQEezOmxkZMy7opKgwFB9nkt5YRrYMjNuG5N87uRgg6CLrbo5wAdT/y6v0mKV0U2w0WZ2YB/++Tpockg=
 github.com ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIOMqqnkVzrm0SdG6UOoqKLsabgH5C9okWi0dh2l9GKJl
