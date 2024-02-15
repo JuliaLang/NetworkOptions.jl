@@ -74,7 +74,7 @@ const BSD_CA_ROOTS = [
 ]
 
 const SYSTEM_CA_ROOTS_LOCK = ReentrantLock()
-const SYSTEM_CA_ROOTS = Ref{String}()
+const SYSTEM_CA_ROOTS = Ref{Union{String,Nothing}}(nothing)
 
 const BEGIN_CERT_REGULAR = "-----BEGIN CERTIFICATE-----"
 const BEGIN_CERT_OPENSSL = "-----BEGIN TRUSTED CERTIFICATE-----"
@@ -84,29 +84,34 @@ NetworkOptions could only find OpenSSL-specific TLS certificates which cannot be
 
 function system_ca_roots()
     lock(SYSTEM_CA_ROOTS_LOCK) do
-        isassigned(SYSTEM_CA_ROOTS) && return # from lock()
-        search_path = Sys.islinux() ? LINUX_CA_ROOTS :
-            Sys.isbsd() && !Sys.isapple() ? BSD_CA_ROOTS : String[]
-        openssl_only = false
-        for path in search_path
-            ispath(path) || continue
-            for line in eachline(path)
-                if line == BEGIN_CERT_REGULAR
-                    SYSTEM_CA_ROOTS[] = path
-                    return # from lock()
-                elseif line == BEGIN_CERT_OPENSSL
-                    openssl_only = true
+        roots = SYSTEM_CA_ROOTS[]
+        if roots === nothing
+            search_path = Sys.islinux() ? LINUX_CA_ROOTS :
+                Sys.isbsd() && !Sys.isapple() ? BSD_CA_ROOTS : String[]
+            openssl_only = false
+            for path in search_path
+                ispath(path) || continue
+                for line in eachline(path)
+                    if line == BEGIN_CERT_REGULAR
+                        roots = path
+                        openssl_only = false
+                        break
+                    elseif line == BEGIN_CERT_OPENSSL
+                        openssl_only = true
+                    end
                 end
             end
+            # warn if we:
+            #  1. did not find any regular certs
+            #  2. did find OpenSSL-only certs
+            openssl_only && @warn OPENSSL_WARNING
+            # TODO: extract system certs on Windows & macOS
+            if roots === nothing
+                roots = bundled_ca_roots()
+            end
         end
-        # warn if we:
-        #  1. did not find any regular certs
-        #  2. did find OpenSSL-only certs
-        openssl_only && @warn OPENSSL_WARNING
-        # TODO: extract system certs on Windows & macOS
-        SYSTEM_CA_ROOTS[] = bundled_ca_roots()
+        return SYSTEM_CA_ROOTS[] = roots::String
     end
-    return SYSTEM_CA_ROOTS[]
 end
 
 const CA_ROOTS_VARS = [
