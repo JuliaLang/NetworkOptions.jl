@@ -1,3 +1,7 @@
+```@meta
+EditURL = "https://github.com/JuliaLang/NetworkOptions.jl/blob/master/docs/src/index.md"
+```
+
 # Network Options
 
 ```@docs
