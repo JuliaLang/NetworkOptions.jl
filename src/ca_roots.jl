@@ -111,8 +111,8 @@ end
 
 const CA_ROOTS_VARS = [
     "JULIA_SSL_CA_ROOTS_PATH"
-    "SSL_CERT_DIR"
     "SSL_CERT_FILE"
+    "SSL_CERT_DIR"
 ]
 
 function _ca_roots(allow_nothing::Bool)
