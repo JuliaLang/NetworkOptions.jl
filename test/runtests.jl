@@ -17,6 +17,7 @@ include("setup.jl")
     @testset "env vars" begin
         unset = ca_roots(), ca_roots_path()
         value = "Why hello!"
+        # set only one CA_ROOT_VAR
         for var in CA_ROOTS_VARS
             ENV[var] = value
             @test ca_roots() == value
@@ -26,12 +27,14 @@ include("setup.jl")
             @test ca_roots_path() == unset[2]
             clear_env()
         end
-        for (i, var) in enumerate(CA_ROOTS_VARS)
-            ENV[var] = string(i)
-        end
-        @test ca_roots() == "1"
-        @test ca_roots_path() == "1"
-        ENV[CA_ROOTS_VARS[1]] = ""
+        # set multiple CA_ROOT_VARS with increasing precedence
+        ENV["SSL_CERT_DIR"] = "3"
+        @test ca_roots() == ca_roots_path() == "3"
+        ENV["SSL_CERT_FILE"] = "2"
+        @test ca_roots() == ca_roots_path() == "2"
+        ENV["JULIA_SSL_CA_ROOTS_PATH"] = "1"
+        @test ca_roots() == ca_roots_path() == "1"
+        ENV["JULIA_SSL_CA_ROOTS_PATH"] = ""
         @test ca_roots() == unset[1]
         @test ca_roots_path() == unset[2]
         clear_env()
