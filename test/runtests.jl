@@ -89,6 +89,19 @@ include("setup.jl")
             @test isempty(dirs)
         end
 
+        # Test with JULIA_SSL_CA_ROOTS_PATH set to a directory
+        mktempdir() do tempdir
+            withenv("JULIA_SSL_CA_ROOTS_PATH" => tempdir,
+                    "SSL_CERT_FILE" => nothing,
+                    "SSL_CERT_DIR" => nothing) do
+                result = ca_root_locations()
+                @test result !== nothing
+                files, dirs = result
+                @test isempty(files)
+                @test dirs == [tempdir]
+            end
+        end
+
         # Test with JULIA_SSL_CA_ROOTS_PATH set to empty string
         withenv("JULIA_SSL_CA_ROOTS_PATH" => "",
                 "SSL_CERT_FILE" => "/ignored/cert.pem",
