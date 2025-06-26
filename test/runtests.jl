@@ -3,41 +3,182 @@ include("setup.jl")
 @testset "ca_roots" begin
     @testset "system certs" begin
         @test isfile(bundled_ca_roots())
-        @test ca_roots_path() isa String
-        @test ispath(ca_roots_path())
+        @test_deprecated ca_roots_path() isa String
+        @test_deprecated ispath(ca_roots_path())
         if Sys.iswindows() || Sys.isapple()
-            @test ca_roots_path() == bundled_ca_roots()
-            @test ca_roots() === nothing
+            @test_deprecated ca_roots_path() == bundled_ca_roots()
+            @test_deprecated ca_roots() === nothing
         else
-            @test ca_roots_path() != bundled_ca_roots()
-            @test ca_roots() == ca_roots_path()
+            @test_deprecated ca_roots_path() != bundled_ca_roots()
+            @test_deprecated ca_roots() == ca_roots_path()
         end
     end
 
     @testset "env vars" begin
-        unset = ca_roots(), ca_roots_path()
+        unset = @test_deprecated((ca_roots(), ca_roots_path()))
         value = "Why hello!"
         # set only one CA_ROOT_VAR
         for var in CA_ROOTS_VARS
             ENV[var] = value
-            @test ca_roots() == value
-            @test ca_roots_path() == value
+            @test_deprecated ca_roots() == value
+            @test_deprecated ca_roots_path() == value
             ENV[var] = ""
-            @test ca_roots() == unset[1]
-            @test ca_roots_path() == unset[2]
+            @test_deprecated ca_roots() == unset[1]
+            @test_deprecated ca_roots_path() == unset[2]
             clear_env()
         end
         # set multiple CA_ROOT_VARS with increasing precedence
         ENV["SSL_CERT_DIR"] = "3"
-        @test ca_roots() == ca_roots_path() == "3"
+        @test_deprecated ca_roots() == ca_roots_path() == "3"
         ENV["SSL_CERT_FILE"] = "2"
-        @test ca_roots() == ca_roots_path() == "2"
+        @test_deprecated ca_roots() == ca_roots_path() == "2"
         ENV["JULIA_SSL_CA_ROOTS_PATH"] = "1"
-        @test ca_roots() == ca_roots_path() == "1"
+        @test_deprecated ca_roots() == ca_roots_path() == "1"
         ENV["JULIA_SSL_CA_ROOTS_PATH"] = ""
-        @test ca_roots() == unset[1]
-        @test ca_roots_path() == unset[2]
+        @test_deprecated ca_roots() == unset[1]
+        @test_deprecated ca_roots_path() == unset[2]
         clear_env()
+    end
+
+    @testset "ca_root_locations" begin
+        path_sep = Sys.iswindows() ? ';' : ':'
+
+        # Test with no environment variables set
+        withenv("JULIA_SSL_CA_ROOTS_PATH" => nothing,
+                "SSL_CERT_FILE" => nothing,
+                "SSL_CERT_DIR" => nothing) do
+            # Test with allow_nothing=true (default)
+            result = ca_root_locations()
+            if Sys.iswindows() || Sys.isapple()
+                @test result === nothing
+            else
+                # On Unix systems, check system locations
+                @test result !== nothing
+                files, dirs = result
+                root = system_ca_roots()
+                if root !== nothing
+                    @test files == [root]
+                    @test isempty(dirs)
+                end
+            end
+
+            # Test with allow_nothing=false
+            result = ca_root_locations(; allow_nothing=false)
+            @test result !== nothing
+            files, dirs = result
+            if Sys.iswindows() || Sys.isapple()
+                @test files == [bundled_ca_roots()]
+                @test isempty(dirs)
+            else
+                root = system_ca_roots()
+                if root !== nothing
+                    @test files == [root]
+                    @test isempty(dirs)
+                end
+            end
+        end
+
+        # Test with JULIA_SSL_CA_ROOTS_PATH set to a file
+        withenv("JULIA_SSL_CA_ROOTS_PATH" => "/path/to/cert.pem",
+                "SSL_CERT_FILE" => nothing,
+                "SSL_CERT_DIR" => nothing) do
+            result = ca_root_locations()
+            @test result !== nothing
+            files, dirs = result
+            @test files == ["/path/to/cert.pem"]
+            @test isempty(dirs)
+        end
+
+        # Test with JULIA_SSL_CA_ROOTS_PATH set to a directory
+        mktempdir() do tempdir
+            withenv("JULIA_SSL_CA_ROOTS_PATH" => tempdir,
+                    "SSL_CERT_FILE" => nothing,
+                    "SSL_CERT_DIR" => nothing) do
+                result = ca_root_locations()
+                @test result !== nothing
+                files, dirs = result
+                @test isempty(files)
+                @test dirs == [tempdir]
+            end
+        end
+
+        # Test with JULIA_SSL_CA_ROOTS_PATH set to empty string
+        withenv("JULIA_SSL_CA_ROOTS_PATH" => "",
+                "SSL_CERT_FILE" => "/ignored/cert.pem",
+                "SSL_CERT_DIR" => nothing) do
+            result = ca_root_locations()
+            # Should ignore other variables and return system defaults
+            if Sys.iswindows() || Sys.isapple()
+                @test result === nothing
+            else
+                @test result !== nothing
+                files, dirs = result
+                root = system_ca_roots()
+                if root !== nothing
+                    @test files == [root]
+                    @test isempty(dirs)
+                end
+            end
+        end
+
+        # Test with SSL_CERT_FILE (single path)
+        withenv("JULIA_SSL_CA_ROOTS_PATH" => nothing,
+                "SSL_CERT_FILE" => "/path1/cert.pem",
+                "SSL_CERT_DIR" => nothing) do
+            result = ca_root_locations()
+            @test result !== nothing
+            files, dirs = result
+            @test files == ["/path1/cert.pem"]
+            @test isempty(dirs)
+        end
+
+        # Test that SSL_CERT_FILE with delimiter is treated as single path
+        withenv("JULIA_SSL_CA_ROOTS_PATH" => nothing,
+                "SSL_CERT_FILE" => "/path1/cert.pem$(path_sep)/path2/cert.pem",
+                "SSL_CERT_DIR" => nothing) do
+            result = ca_root_locations()
+            @test result !== nothing
+            files, dirs = result
+            @test files == ["/path1/cert.pem$(path_sep)/path2/cert.pem"]
+            @test isempty(dirs)
+        end
+
+        # Test with SSL_CERT_DIR containing multiple paths
+        withenv("JULIA_SSL_CA_ROOTS_PATH" => nothing,
+                "SSL_CERT_FILE" => nothing,
+                "SSL_CERT_DIR" => "/certs1$(path_sep)/certs2") do
+            result = ca_root_locations()
+            @test result !== nothing
+            files, dirs = result
+            @test isempty(files)
+            @test dirs == ["/certs1", "/certs2"]
+        end
+
+        # Test with both SSL_CERT_FILE and SSL_CERT_DIR
+        withenv("JULIA_SSL_CA_ROOTS_PATH" => nothing,
+                "SSL_CERT_FILE" => "/cert1.pem",
+                "SSL_CERT_DIR" => "/certs1$(path_sep)/certs2") do
+            result = ca_root_locations()
+            @test result !== nothing
+            files, dirs = result
+            @test files == ["/cert1.pem"]
+            @test dirs == ["/certs1", "/certs2"]
+        end
+
+        # Test that ca_roots() uses ca_root_locations() correctly
+        # Priority should be files over directories
+        withenv("JULIA_SSL_CA_ROOTS_PATH" => nothing,
+                "SSL_CERT_FILE" => "/cert.pem",
+                "SSL_CERT_DIR" => "/certs") do
+            @test_deprecated ca_roots() == "/cert.pem"
+        end
+
+        # Test with only SSL_CERT_DIR
+        withenv("JULIA_SSL_CA_ROOTS_PATH" => nothing,
+                "SSL_CERT_FILE" => nothing,
+                "SSL_CERT_DIR" => "/certs") do
+            @test_deprecated ca_roots() == "/certs"
+        end
     end
 end
 

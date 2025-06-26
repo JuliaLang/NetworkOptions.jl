@@ -1,7 +1,7 @@
 using Test
 using Logging
 using NetworkOptions
-using NetworkOptions: CA_ROOTS_VARS, bundled_ca_roots, bundled_known_hosts
+using NetworkOptions: CA_ROOTS_VARS, bundled_ca_roots, bundled_known_hosts, system_ca_roots
 
 const pkg_dir = dirname(@__DIR__)
 
