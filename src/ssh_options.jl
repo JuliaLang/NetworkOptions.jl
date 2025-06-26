@@ -144,20 +144,11 @@ end
 
 ## helper functions
 
-const BUNDLED_KNOWN_HOSTS_LOCK = ReentrantLock()
-const BUNDLED_KNOWN_HOSTS_FILE = Ref{Union{Nothing, String}}(nothing)
-
-function bundled_known_hosts()
-    lock(BUNDLED_KNOWN_HOSTS_LOCK) do
-        file = BUNDLED_KNOWN_HOSTS_FILE[]
-        if file === nothing
-            file, io = mktemp()
-            BUNDLED_KNOWN_HOSTS_FILE[] = file
-            write(io, BUNDLED_KNOWN_HOSTS)
-            close(io)
-        end
-        return file::String
-    end
+const bundled_known_hosts = OncePerProcess{String}() do
+    file, io = mktemp()
+    write(io, BUNDLED_KNOWN_HOSTS)
+    close(io)
+    return file
 end
 
 const BUNDLED_KNOWN_HOSTS = """

@@ -73,30 +73,22 @@ const BSD_CA_ROOTS = [
     "/usr/local/etc/ssl/cert.pem"                       # FreeBSD
 ]
 
-const SYSTEM_CA_ROOTS_LOCK = ReentrantLock()
-const SYSTEM_CA_ROOTS = Ref{Union{Nothing, String}}(nothing)
-
 const BEGIN_CERT_REGULAR = "-----BEGIN CERTIFICATE-----"
 const BEGIN_CERT_OPENSSL = "-----BEGIN TRUSTED CERTIFICATE-----"
 
-function system_ca_roots()
-    lock(SYSTEM_CA_ROOTS_LOCK) do
-        SYSTEM_CA_ROOTS[] !== nothing && return # from lock()
-        search_path = Sys.islinux() ? LINUX_CA_ROOTS :
-            Sys.isbsd() && !Sys.isapple() ? BSD_CA_ROOTS : String[]
-        for path in search_path
-            ispath(path) || continue
-            for line in eachline(path)
-                if line in [BEGIN_CERT_REGULAR, BEGIN_CERT_OPENSSL]
-                    SYSTEM_CA_ROOTS[] = path
-                    return # from lock()
-                end
+const system_ca_roots = OncePerProcess{String}() do
+    search_path = Sys.islinux() ? LINUX_CA_ROOTS :
+        Sys.isbsd() && !Sys.isapple() ? BSD_CA_ROOTS : String[]
+    for path in search_path
+        ispath(path) || continue
+        for line in eachline(path)
+            if line in [BEGIN_CERT_REGULAR, BEGIN_CERT_OPENSSL]
+                return path
             end
         end
-        # TODO: extract system certs on Windows & macOS
-        SYSTEM_CA_ROOTS[] = bundled_ca_roots()
     end
-    return SYSTEM_CA_ROOTS[]
+    # TODO: extract system certs on Windows & macOS
+    return bundled_ca_roots()
 end
 
 const CA_ROOTS_VARS = [
