@@ -84,7 +84,10 @@ function ca_root_locations(; allow_nothing::Bool=true)::Union{Nothing, Tuple{Vec
     # Check for JULIA_SSL_CA_ROOTS_PATH first
     julia_path = get(ENV, "JULIA_SSL_CA_ROOTS_PATH", nothing)
     if julia_path == ""
-        # Empty string means ignore other variables
+        # Empty string means ignore other variables and use system defaults
+        if allow_nothing && (Sys.iswindows() || Sys.isapple())
+            return nothing
+        end
         return _system_ca_root_locations()
     elseif julia_path !== nothing
         # JULIA_SSL_CA_ROOTS_PATH is set, determine if it's a file or directory
