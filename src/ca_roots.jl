@@ -21,7 +21,7 @@ of these variables that is set (whether the path exists or not). If
 are ignored (as if unset); if the other variables are set to the empty string,
 they behave is if they are not set.
 """
-ca_roots()::Union{Nothing,String} = _ca_roots(true)
+ca_roots() = _ca_roots(true)::Union{Nothing,String}
 
 """
     ca_roots_path() :: String
@@ -48,7 +48,7 @@ of these variables that is set (whether the path exists or not). If
 are ignored (as if unset); if the other variables are set to the empty string,
 they behave is if they are not set.
 """
-ca_roots_path()::String = _ca_roots(false)
+ca_roots_path() = _ca_roots(false)::String
 
 # NOTE: this has to be a function not a constant since the
 # value of Sys.BINDIR changes from build time to run time.
